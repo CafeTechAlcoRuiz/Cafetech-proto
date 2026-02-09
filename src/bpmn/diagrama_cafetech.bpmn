@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" xmlns:zeebe="http://camunda.org/schema/zeebe/1.0" id="Definitions_12dbx96" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.43.1" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.8.0">
+  <bpmn:process id="Process_CafeTech" name="Proceso de Ordenes CafeTech" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1" name="Orden Recibida">
+      <bpmn:outgoing>Flow_0k9d8f1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_0k9d8f1" sourceRef="StartEvent_1" targetRef="Activity_ValidarStock" />
+    <bpmn:serviceTask id="Activity_ValidarStock" name="Validar Stock y Datos">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="validar-stock" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0k9d8f1</bpmn:incoming>
+      <bpmn:outgoing>Flow_1vo4c3b</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gateway_Validacion" name="¿Datos Validos?" default="Flow_ToCobro">
+      <bpmn:incoming>Flow_1vo4c3b</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToCobro</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Invalid</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_1vo4c3b" sourceRef="Activity_ValidarStock" targetRef="Gateway_Validacion" />
+    <bpmn:sequenceFlow id="Flow_ToCobro" name="Sí" sourceRef="Gateway_Validacion" targetRef="Activity_CobrarOrden" />
+    <bpmn:endEvent id="Event_OrdenRechazada" name="Orden Rechazada">
+      <bpmn:incoming>Flow_Invalid</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_Invalid" name="No (Stock/Datos)" sourceRef="Gateway_Validacion" targetRef="Event_OrdenRechazada">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=esValido = false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:serviceTask id="Activity_CobrarOrden" name="Realizar Cobro">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="cobrar-orden" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_ToCobro</bpmn:incoming>
+      <bpmn:outgoing>Flow_0bz1d3x</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_0bz1d3x" sourceRef="Activity_CobrarOrden" targetRef="Activity_Cocina" />
+    <bpmn:serviceTask id="Activity_Cocina" name="Preparar en Cocina">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="preparar-orden" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0bz1d3x</bpmn:incoming>
+      <bpmn:outgoing>Flow_1g8o9j2</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:boundaryEvent id="Event_ErrorCocina" name="Error en Cocina" attachedToRef="Activity_Cocina">
+      <bpmn:outgoing>Flow_ToCompensate</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="ErrorEventDefinition_1x2y3z" errorRef="Error_CocinaFallo" />
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="Flow_ToCompensate" sourceRef="Event_ErrorCocina" targetRef="Activity_Reembolso" />
+    <bpmn:serviceTask id="Activity_Reembolso" name="Reembolsar Dinero (Compensación)">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="reembolsar-dinero" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_ToCompensate</bpmn:incoming>
+      <bpmn:incoming>Flow_GlobalRefund</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToNotifyFail</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Activity_NotificarFallo" name="Notificar Cancelación">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="notificar-usuario" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_ToNotifyFail</bpmn:incoming>
+      <bpmn:outgoing>Flow_EndError</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_ToNotifyFail" sourceRef="Activity_Reembolso" targetRef="Activity_NotificarFallo" />
+    <bpmn:endEvent id="Event_FinError" name="Fin con Error Compensado">
+      <bpmn:incoming>Flow_EndError</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_EndError" sourceRef="Activity_NotificarFallo" targetRef="Event_FinError" />
+    <bpmn:sequenceFlow id="Flow_1g8o9j2" sourceRef="Activity_Cocina" targetRef="Activity_NotificarLista" />
+    <bpmn:serviceTask id="Activity_NotificarLista" name="Notificar: Orden Lista">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="notificar-usuario" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1g8o9j2</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToDelivery</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_ToDelivery" sourceRef="Activity_NotificarLista" targetRef="Activity_Entrega" />
+    <bpmn:serviceTask id="Activity_Entrega" name="Asignar Repartidor">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="asignar-delivery" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_ToDelivery</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToSuccess</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="Event_Exito" name="Orden Entregada">
+      <bpmn:incoming>Flow_ToSuccess</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_ToSuccess" sourceRef="Activity_Entrega" targetRef="Event_Exito" />
+    <bpmn:subProcess id="Activity_GlobalCancel" name="Manejo de Cancelación Global" triggeredByEvent="true">
+      <bpmn:startEvent id="Event_SignalCancel" name="Señal: CANCELAR_TODO">
+        <bpmn:outgoing>Flow_SubStart</bpmn:outgoing>
+        <bpmn:signalEventDefinition id="SignalEventDefinition_1" signalRef="Signal_Cancelacion" />
+      </bpmn:startEvent>
+      <bpmn:sequenceFlow id="Flow_SubStart" sourceRef="Event_SignalCancel" targetRef="Activity_LogCancel" />
+      <bpmn:serviceTask id="Activity_LogCancel" name="Loggear Cancelación Forzada">
+        <bpmn:extensionElements>
+          <zeebe:taskDefinition type="log-error" />
+        </bpmn:extensionElements>
+        <bpmn:incoming>Flow_SubStart</bpmn:incoming>
+        <bpmn:outgoing>Flow_ToGlobalRefund</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:sequenceFlow id="Flow_ToGlobalRefund" sourceRef="Activity_LogCancel" targetRef="End_SignalSub" />
+      <bpmn:endEvent id="End_SignalSub" name="Ir a Reembolso">
+        <bpmn:incoming>Flow_ToGlobalRefund</bpmn:incoming>
+        <bpmn:errorEventDefinition id="ErrorEventDefinition_Global" errorRef="Error_GlobalRefund" />
+      </bpmn:endEvent>
+    </bpmn:subProcess>
+    <bpmn:boundaryEvent id="Event_CatchGlobalRefund" attachedToRef="Activity_GlobalCancel">
+      <bpmn:outgoing>Flow_GlobalRefund</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="ErrorEventDefinition_Catch" errorRef="Error_GlobalRefund" />
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="Flow_GlobalRefund" sourceRef="Event_CatchGlobalRefund" targetRef="Activity_Reembolso" />
+  </bpmn:process>
+  <bpmn:error id="Error_CocinaFallo" name="ErrorCocina" errorCode="ERROR_COCINA" />
+  <bpmn:signal id="Signal_Cancelacion" name="CANCELAR_TODO" />
+  <bpmn:error id="Error_GlobalRefund" name="GlobalRefund" errorCode="GLOBAL_REFUND" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_CafeTech">
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="159" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="160" y="202" width="77" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0oxs40c_di" bpmnElement="Activity_ValidarStock">
+        <dc:Bounds x="270" y="137" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_0n2q3z1_di" bpmnElement="Gateway_Validacion" isMarkerVisible="true">
+        <dc:Bounds x="425" y="152" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="410" y="122" width="81" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0y4k8j2_di" bpmnElement="Event_OrdenRechazada">
+        <dc:Bounds x="432" y="272" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="406" y="315" width="89" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0r9t8u1_di" bpmnElement="Activity_CobrarOrden">
+        <dc:Bounds x="530" y="137" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1w2e3r4_di" bpmnElement="Activity_Cocina">
+        <dc:Bounds x="690" y="137" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_Reembolso_di" bpmnElement="Activity_Reembolso">
+        <dc:Bounds x="690" y="290" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_NotificarFallo_di" bpmnElement="Activity_NotificarFallo">
+        <dc:Bounds x="850" y="290" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_FinError_di" bpmnElement="Event_FinError">
+        <dc:Bounds x="1002" y="312" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="986" y="355" width="68" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1l5k6j7_di" bpmnElement="Activity_NotificarLista">
+        <dc:Bounds x="850" y="137" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1m8n9b0_di" bpmnElement="Activity_Entrega">
+        <dc:Bounds x="1010" y="137" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0p3q4r5_di" bpmnElement="Event_Exito">
+        <dc:Bounds x="1172" y="159" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1148" y="202" width="85" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0s1t2u3_di" bpmnElement="Activity_GlobalCancel" isExpanded="true">
+        <dc:Bounds x="250" y="450" width="350" height="200" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_SignalCancel_di" bpmnElement="Event_SignalCancel">
+        <dc:Bounds x="290" y="532" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="268" y="575" width="81" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_LogCancel_di" bpmnElement="Activity_LogCancel">
+        <dc:Bounds x="380" y="510" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_SignalSub_di" bpmnElement="End_SignalSub">
+        <dc:Bounds x="532" y="532" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="514" y="575" width="73" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_SubStart_di" bpmnElement="Flow_SubStart">
+        <di:waypoint x="326" y="550" />
+        <di:waypoint x="380" y="550" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ToGlobalRefund_di" bpmnElement="Flow_ToGlobalRefund">
+        <di:waypoint x="480" y="550" />
+        <di:waypoint x="532" y="550" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Event_1x2y3z_di" bpmnElement="Event_ErrorCocina">
+        <dc:Bounds x="722" y="199" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="653" y="233" width="77" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_CatchGlobal_di" bpmnElement="Event_CatchGlobalRefund">
+        <dc:Bounds x="582" y="532" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_0k9d8f1_di" bpmnElement="Flow_0k9d8f1">
+        <di:waypoint x="215" y="177" />
+        <di:waypoint x="270" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1vo4c3b_di" bpmnElement="Flow_1vo4c3b">
+        <di:waypoint x="370" y="177" />
+        <di:waypoint x="425" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ToCobro_di" bpmnElement="Flow_ToCobro">
+        <di:waypoint x="475" y="177" />
+        <di:waypoint x="530" y="177" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="497" y="159" width="11" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Invalid_di" bpmnElement="Flow_Invalid">
+        <di:waypoint x="450" y="202" />
+        <di:waypoint x="450" y="272" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="458" y="233" width="84" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0bz1d3x_di" bpmnElement="Flow_0bz1d3x">
+        <di:waypoint x="630" y="177" />
+        <di:waypoint x="690" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ToCompensate_di" bpmnElement="Flow_ToCompensate">
+        <di:waypoint x="740" y="235" />
+        <di:waypoint x="740" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ToNotifyFail_di" bpmnElement="Flow_ToNotifyFail">
+        <di:waypoint x="790" y="330" />
+        <di:waypoint x="850" y="330" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_EndError_di" bpmnElement="Flow_EndError">
+        <di:waypoint x="950" y="330" />
+        <di:waypoint x="1002" y="330" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1g8o9j2_di" bpmnElement="Flow_1g8o9j2">
+        <di:waypoint x="790" y="177" />
+        <di:waypoint x="850" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ToDelivery_di" bpmnElement="Flow_ToDelivery">
+        <di:waypoint x="950" y="177" />
+        <di:waypoint x="1010" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ToSuccess_di" bpmnElement="Flow_ToSuccess">
+        <di:waypoint x="1110" y="177" />
+        <di:waypoint x="1172" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_GlobalRefund_di" bpmnElement="Flow_GlobalRefund">
+        <di:waypoint x="618" y="550" />
+        <di:waypoint x="650" y="550" />
+        <di:waypoint x="650" y="360" />
+        <di:waypoint x="690" y="360" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

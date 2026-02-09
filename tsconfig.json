@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    /* Configuración Básica */
+    "typeRoots": ["./src/types", "./node_modules/@types"],
+    "target": "ES2020",                // Versión de JS a la que traduce
+    "module": "commonjs",              // Formato de módulos estándar de Node
+    "moduleResolution": "node",        // Cómo busca las carpetas node_modules
+    "outDir": "./dist",                // Dónde guarda los archivos compilados
+    "rootDir": "./src",                // Dónde está tu código fuente
+    
+    /* Interoperabilidad */
+    "esModuleInterop": true,           // Permite usar 'import' con librerías viejas
+    "resolveJsonModule": true,         // Permite importar archivos .json
+    
+    /* Reglas estrictas (pero sin verbatimModuleSyntax) */
+    "strict": true,
+    "skipLibCheck": true,              // Salta chequeo de tipos en librerías externas (ahorra errores)
+    "forceConsistentCasingInFileNames": true,
+    
+    /* Decoradores (Necesario para frameworks futuros) */
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
+  }
+}
