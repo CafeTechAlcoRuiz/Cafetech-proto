@@ -25,9 +25,9 @@ export class PostgresTicketRepo implements ITicketRepository {
           estado TEXT
         );
       `);
-      console.log('✅ Tabla tickets_cocina verificada en Postgres');
+      console.log('✓✓ Tabla tickets_cocina verificada en Postgres');
     } catch (err) {
-      console.error('❌ Error creando tabla tickets:', err);
+      console.error('⚠︎ Error creando tabla tickets ⚠︎:', err);
     } finally {
       client.release();
     }

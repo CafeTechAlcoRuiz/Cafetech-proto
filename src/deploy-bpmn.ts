@@ -24,7 +24,7 @@ async function deploy() {
     console.log(`   Llave (Key): ${res.deployments[0].process.processDefinitionKey}`);
     
   } catch (e) {
-    console.error(' Error al desplegar:', e);
+    console.error('⚠︎ Error al desplegar: ⚠︎', e);
   }
 }
 

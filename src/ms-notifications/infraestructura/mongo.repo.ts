@@ -33,10 +33,10 @@ export class MongoNotificationRepo implements INotifRepository {
         await mongoose.connect(process.env.MONGO_URI!, {
           dbName: 'cafetech_logs' 
         });
-        console.log('✅ MS Notificaciones: Conectado a MongoDB (cafetech_logs)');
+        console.log('✓✓ MS Notificaciones: Conectado a MongoDB (cafetech_logs)');
       }
     } catch (error) {
-      console.error('❌ Error conectando a Mongo:', error);
+      console.error('⚠︎ Error conectando a Mongo: ⚠︎', error);
     }
   }
 
@@ -50,7 +50,7 @@ export class MongoNotificationRepo implements INotifRepository {
       });
       // console.log(`[MONGO] Log guardado`);
     } catch (error) {
-      console.error('Error guardando log en Mongo:', error);
+      console.error('⚠︎ Error guardando log en Mongo: ⚠︎', error);
       throw new Error('Fallo de persistencia en Mongo');
     }
   }

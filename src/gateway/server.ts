@@ -49,11 +49,20 @@ app.post('/orders', verifyToken, async (req: Request, res) => {
   };
 
   try {
-    // PUBLICAR AL BROKER (Ingesta Asíncrona) [cite: 50]
+    // PUBLICAR AL BROKER (Ingesta Asíncrona)
     const rabbit = RabbitMQClient.getInstance();
+
+    // envía al flujo principal (Camunda)
     await rabbit.publish('incoming_orders', orderData);
 
-    console.log(`Gateway publica mensaje a RabbitMQ: Orden recibida y enviada al Broker. ID: ${orderId}`);
+    // envía notificación de estado CREADA
+    await rabbit.publish('app_notifications', {
+        orderId,
+        estado: 'CREADA',
+        detalle: 'La orden ha sido recibida en el sistema.'
+      });
+
+    console.log(`✉︎ Gateway publica mensaje a RabbitMQ: Orden recibida y enviada al Broker. ID: ${orderId}`);
 
     res.status(202).json({ 
       message: 'Orden recibida y en procesamiento', 
@@ -66,7 +75,7 @@ app.post('/orders', verifyToken, async (req: Request, res) => {
 
 const start = async () => {
   await RabbitMQClient.getInstance().connect(process.env.RABBITMQ_URL!);
-  app.listen(3000, () => console.log('CORRIENDO: API Gateway corriendo en puerto 3000'));
+  app.listen(3000, () => console.log('CORRIENDO: ✉︎ API Gateway corriendo en puerto 3000'));
 };
 
 start();

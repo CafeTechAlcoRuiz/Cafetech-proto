@@ -1,6 +1,7 @@
 import { ZBClient } from 'zeebe-node';
 import { MongoNotificationRepo } from './infraestructura/mongo.repo';
 import { SendNotificationUseCase } from './application/send-notification.usecase';
+import { RabbitMQClient } from '../shared/rabbit';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -11,38 +12,44 @@ const useCase = new SendNotificationUseCase(repo);
 
 console.log('📯 MS Notificaciones (Worker) escuchando tareas...');
 
-// 1. Worker para Notificaciones Generales (Éxito o Fallo controlado)
-zbc.createWorker({
-  taskType: 'notificar-usuario',
-  taskHandler: async (job) => {
-    const { orderId } = job.variables;
-    
-    // Determinamos el mensaje según en qué parte del flujo estemos
-    // (Podemos inferirlo o pasarlo como variable desde Camunda si configuras headers)
-    const mensaje = "Actualización de estado de su pedido"; 
-
-    try {
-      await useCase.execute(orderId, mensaje, 'EMAIL');
-      return job.complete();
-    } catch (e: any) {
-      console.error('Fallo al notificar:', e);
-      return job.fail(e.message);
-    }
+const iniciarNotificaciones = async () => {
+  const rabbit = RabbitMQClient.getInstance();
+  
+  // 1. Conectar a RabbitMQ
+  try {
+    await rabbit.connect(process.env.RABBITMQ_URL!);
+  } catch(e) {
+    console.error('⚠︎ Error conectando a RabbitMQ: ⚠︎', e);
+    process.exit(1);
   }
-});
 
-// 2. Worker para Log de Errores Críticos (Cancelación Global)
-zbc.createWorker({
-  taskType: 'log-error',
-  taskHandler: async (job) => {
-    const { orderId } = job.variables;
-    console.log(`🚨 ALERTA: Procesando Log de Cancelación Global para ${orderId}`);
+  // 2. Escuchar la cola de eventos de estado
+  await rabbit.consume('app_notifications', async (msg) => {
+    const { orderId, estado, detalle } = msg;
+    console.log(`\n🔥Evento recibido: Orden ${estado}`);
+    
+    await useCase.execute(orderId, `Estado cambiado a: ${estado}. ${detalle || ''}`, 'EMAIL');
+  });
 
-    try {
+  // 3. Worker de Camunda para Notificaciones Generales (Éxito o Fallo controlado)
+  zbc.createWorker({
+    taskType: 'notificar-usuario',
+    taskHandler: async (job) => {
+      const { orderId } = job.variables;
+      // Notificación genérica de fin de proceso
+      await useCase.execute(orderId, "Proceso finalizado correctamente", 'EMAIL');
+      return job.complete();
+    }
+  });
+
+  zbc.createWorker({
+    taskType: 'log-error',
+    taskHandler: async (job) => {
+      const { orderId } = job.variables;
       await useCase.execute(orderId, "CANCELACIÓN FORZADA DEL SISTEMA", 'SMS');
       return job.complete();
-    } catch (e) {
-      return job.complete(); // No fallamos el proceso de error
     }
-  }
-});
+  });
+};
+
+iniciarNotificaciones();

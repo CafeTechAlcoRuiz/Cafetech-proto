@@ -5,17 +5,17 @@ export class PrepareOrderUseCase {
 
   async execute(idOrden: string, items: any[]): Promise<string> {
     
-    // 1. Usamos el método estático del diagrama para crear la instancia
+    // se usa el método estático del diagrama para crear la instancia
     const ticket = TicketCocina.crearTicket(idOrden);
     
-    // Persistimos el estado inicial (PENDIENTE)
+    // se persiste el estado inicial (PENDIENTE)
     await this.repo.save(ticket);
-    console.log(`👨‍🍳 Cocina: Ticket ${ticket.idTicket} creado a las ${ticket.horaEntrada.toISOString()}`);
+    console.log(`𐂐◯🗡 Nuevo ticket en Cocina: Ticket ${ticket.idTicket} creado a las ${ticket.horaEntrada.toISOString()}`);
 
     // SIMULACIÓN DE PROCESO (2 segundos)
     await new Promise(resolve => setTimeout(resolve, 2000));
 
-    // --- LÓGICA DE EXCEPCIÓN (Escenario "Oops") ---
+    // --- LÓGICA DE EXCEPCIÓN (Escenario de excepción) ---
     const debeFallar = items.some((i: any) => i.product === 'error_cocina');
 
     if (debeFallar) {
@@ -24,13 +24,13 @@ export class PrepareOrderUseCase {
       throw new Error('La máquina de café explotó'); 
     }
 
-    // 2. Usamos el método del diagrama para finalizar
+    // se usa el método del diagrama para finalizar
     ticket.finalizarTicket();
     
-    // Persistimos el cambio de estado
+    // persiste el cambio de estado
     await this.repo.save(ticket);
     
-    console.log(`✅ Cocina: Orden ${idOrden} FINALIZADA.`);
+    console.log(`✓✓ Fin de Preparación en Cocina: Orden ${idOrden} FINALIZADA.`);
     return ticket.idTicket;
   }
 }

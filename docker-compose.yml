@@ -3,14 +3,14 @@ services:
   postgres:
     image: postgres:15
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: password
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 12345
       POSTGRES_DB: cafetech
     ports:
       - "5432:5432"
   
   mongo:
-    image: mongo:6
+    image: mongo
     ports:
       - "27017:27017"
 

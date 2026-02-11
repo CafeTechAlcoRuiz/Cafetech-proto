@@ -9,7 +9,7 @@ export class SendNotificationUseCase {
     const notificacion = RegistroNotificacion.crear(idOrden, mensajeBase, tipo);
 
     // 2. Simular el servicio externo (Email/SMS) 
-    console.log(`📧 ENVIANDO ${tipo} PARA ORDEN [${idOrden}]: "${notificacion.mensaje}"`);
+    console.log(`⌯⌲ ENVIANDO ${tipo} PARA ORDEN [${idOrden}]: "${notificacion.mensaje}"`);
     
     // Simulación de latencia de red
     await new Promise(resolve => setTimeout(resolve, 500));
@@ -17,6 +17,6 @@ export class SendNotificationUseCase {
     // 3. Persistir el Log (Requisito de Trazabilidad) [cite: 177]
     await this.repo.log(notificacion);
     
-    console.log(`📝 Notificación registrada en MongoDB (ID: ${notificacion.idLog})`);
+    console.log(`➜] Notificación registrada en MongoDB (ID: ${notificacion.idLog})`);
   }
 }

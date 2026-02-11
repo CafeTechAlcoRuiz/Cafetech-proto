@@ -12,7 +12,7 @@ const startBridge = async () => {
   const rabbit = RabbitMQClient.getInstance();
   await rabbit.connect(process.env.RABBITMQ_URL!);
 
-  console.log('PUENTE LEVANTADO: Bridge Broker-Camunda iniciado...');
+  console.log('⛩ PUENTE LEVANTADO: Bridge Broker-Camunda iniciado...');
 
   // Consumir de RabbitMQ
   await rabbit.consume('incoming_orders', async (orderData) => {

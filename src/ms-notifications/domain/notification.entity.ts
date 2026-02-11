@@ -27,7 +27,7 @@ export class RegistroNotificacion {
     if (!idOrden) throw new Error("ID de Orden requerido para notificar");
     
     // Simulación de "Plantillas de Mensaje"
-    const mensajeFinal = `Hola, tu orden ${idOrden} está en estado: ${estado}. Detalle: ${plantilla}`;
+    const mensajeFinal = `\nHola, el estado de tu orden ${idOrden} se te ha enviado por: ${estado}. Detalle: ${plantilla}`;
     
     return new RegistroNotificacion(
       uuidv4(),
