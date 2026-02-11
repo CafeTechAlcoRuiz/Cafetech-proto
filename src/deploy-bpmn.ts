@@ -9,7 +9,7 @@ async function deploy() {
   console.log('Iniciando despliegue de flujo BPMN...');
 
   try {
-    const gatewayAddress = process.env.ZEEBE_CLUSTER_ID! + '.cdg-1.zeebe.camunda.cloud:443';
+    const gatewayAddress = process.env.ZEEBE_CLUSTER_ID! + '.cdg-1.zeebe.camunda.io:443';
     const zbc = new ZBClient(gatewayAddress, {
       useTLS: true,
       oAuth: {
