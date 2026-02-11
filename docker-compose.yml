@@ -1,24 +1,137 @@
 version: '3.8'
+
 services:
-  postgres:
-    image: postgres:15
+  gateway:
+    build: .
+    container_name: cafetech-gateway
+    ports:
+      - "3000:3000"
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 12345
+      NODE_ENV: ${NODE_ENV:-production}
+      RABBITMQ_URL: ${RABBITMQ_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      ZEEBE_URL: ${ZEEBE_URL:-http://zeebe:26500}
+      ZEEBE_INSECURE_CONNECTION: "true"
+    depends_on:
+      - postgres
+      - mongo
+      - zeebe
+    networks:
+      - cafetech-network
+
+  ms-orders:
+    build:
+      context: .
+      dockerfile: Dockerfile.orders
+    container_name: cafetech-ms-orders
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      RABBITMQ_URL: ${RABBITMQ_URL}
+      ZEEBE_URL: ${ZEEBE_URL:-http://zeebe:26500}
+      ZEEBE_INSECURE_CONNECTION: "true"
+      DB_HOST: postgres
+      DB_USER: ${POSTGRES_USER:-postgres}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-12345}
+      DB_NAME: cafetech
+    depends_on:
+      - postgres
+      - zeebe
+    networks:
+      - cafetech-network
+
+  ms-kitchen:
+    build:
+      context: .
+      dockerfile: Dockerfile.kitchen
+    container_name: cafetech-ms-kitchen
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      RABBITMQ_URL: ${RABBITMQ_URL}
+      ZEEBE_URL: ${ZEEBE_URL:-http://zeebe:26500}
+      ZEEBE_INSECURE_CONNECTION: "true"
+      DB_HOST: postgres
+      DB_USER: ${POSTGRES_USER:-postgres}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-12345}
+      DB_NAME: cafetech
+    depends_on:
+      - postgres
+      - zeebe
+    networks:
+      - cafetech-network
+
+  ms-notifications:
+    build:
+      context: .
+      dockerfile: Dockerfile.notifications
+    container_name: cafetech-ms-notifications
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      RABBITMQ_URL: ${RABBITMQ_URL}
+      MONGO_URI: ${MONGO_URI:-mongodb://mongo:27017/cafetech}
+    depends_on:
+      - mongo
+    networks:
+      - cafetech-network
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: cafetech-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-12345}
       POSTGRES_DB: cafetech
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
-  
+    networks:
+      - cafetech-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   mongo:
-    image: mongo
+    image: mongo:latest
+    container_name: cafetech-mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-password}
+      MONGO_INITDB_DATABASE: cafetech
+    volumes:
+      - mongo_data:/data/db
     ports:
       - "27017:27017"
+    networks:
+      - cafetech-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  # Camunda 8 Self-Managed (Versión simplificada para dev local si no tienes cuenta Cloud)
   zeebe:
     image: camunda/zeebe:8.3.0
+    container_name: cafetech-zeebe
+    environment:
+      ZEEBE_INSECURE_CONNECTION: "true"
+      ZEEBE_AUTHENTICATION_MODE: "none"
     ports:
       - "26500:26500"
       - "9600:9600"
-    environment:
-      - ZEEBE_INSECURE_CONNECTION=true
+    networks:
+      - cafetech-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9600/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres_data:
+  mongo_data:
+
+networks:
+  cafetech-network:
+    driver: bridge
