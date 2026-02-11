@@ -4,8 +4,12 @@ import { ValidateOrderUseCase } from './application/validate-order.usecase';
 import { RabbitMQClient } from '../shared/rabbit';
 import dotenv from 'dotenv';
 import express from 'express';
+import dns from 'dns';
 
 dotenv.config();
+
+// Forzar IPv4 en resolución de DNS globalmente
+dns.setDefaultResultOrder('ipv4first');
 
 // Health check server para Render
 const app = express();
