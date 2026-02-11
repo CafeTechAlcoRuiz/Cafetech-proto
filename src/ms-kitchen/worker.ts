@@ -7,9 +7,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // Configurar cliente Zeebe para Camunda Cloud
-const zbc = new ZBClient({
-  hostname: process.env.ZEEBE_ADDRESS || 'localhost',
-  port: 26500,
+const zbc = new ZBClient(process.env.ZEEBE_ADDRESS || 'localhost:26500', {
   useTLS: true,
   oAuth: {
     url: 'https://login.cloud.camunda.io/oauth/token',

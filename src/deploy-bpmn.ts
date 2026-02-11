@@ -9,12 +9,12 @@ async function deploy() {
   console.log('Iniciando despliegue de flujo BPMN...');
 
   try {
-    const zbc = new ZBClient({
-      clientId: process.env.ZEEBE_CLIENT_ID,
-      clientSecret: process.env.ZEEBE_CLIENT_SECRET,
-      camundaCloud: {
-        clusterId: process.env.ZEEBE_ADDRESS?.split('.')[0] || '',
-        region: 'cdg-1'
+    const zbc = new ZBClient(process.env.ZEEBE_ADDRESS || 'localhost:26500', {
+      useTLS: true,
+      oAuth: {
+        url: 'https://login.cloud.camunda.io/oauth/token',
+        clientId: process.env.ZEEBE_CLIENT_ID,
+        clientSecret: process.env.ZEEBE_CLIENT_SECRET
       }
     });
 
