@@ -1,16 +1,17 @@
-import { Camunda8 } from '@camunda8/sdk';
+import { ZBClient } from '@camunda8/sdk';
 import { RabbitMQClient } from '../shared/rabbit';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-const camunda8 = new Camunda8({
-  ZEEBE_CLIENT_ID: process.env.ZEEBE_CLIENT_ID,
-  ZEEBE_CLIENT_SECRET: process.env.ZEEBE_CLIENT_SECRET,
-  ZEEBE_ADDRESS: process.env.ZEEBE_ADDRESS
+const zbc = new ZBClient({
+  clientId: process.env.ZEEBE_CLIENT_ID,
+  clientSecret: process.env.ZEEBE_CLIENT_SECRET,
+  camundaCloud: {
+    clusterId: process.env.ZEEBE_ADDRESS?.split('.')[0] || '',
+    region: 'cdg-1'
+  }
 });
-
-const zbc = camunda8.getZeebeClient();
 
 const startBridge = async () => {
   const rabbit = RabbitMQClient.getInstance();
