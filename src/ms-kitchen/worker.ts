@@ -1,4 +1,4 @@
-import { ZBClient } from 'zeebe-node';
+import { Camunda8 } from '@camunda8/sdk';
 import { PrepareOrderUseCase } from './application/prepare-order.usecase';
 import { PostgresTicketRepo } from './infraestructure/postgres.repo';
 import { RabbitMQClient } from '../shared/rabbit';
@@ -6,8 +6,14 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Configuración
-const zbc = new ZBClient();
+// Configurar Camunda Cloud
+const camunda8 = new Camunda8({
+  ZEEBE_CLIENT_ID: process.env.ZEEBE_CLIENT_ID,
+  ZEEBE_CLIENT_SECRET: process.env.ZEEBE_CLIENT_SECRET,
+  ZEEBE_ADDRESS: process.env.ZEEBE_ADDRESS
+});
+
+const zbc = camunda8.getZeebeClient();
 
 // Inyección de Dependencias
 const repo = new PostgresTicketRepo(); 
@@ -71,4 +77,24 @@ zbc.createWorker({
     console.log(`¡$! Reembolso completado.`);
     return job.complete();
   }
+});
+
+// Conectar con reintentos
+const connectWithRetries = async (maxAttempts = 10) => {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      await zbc.topology();
+      console.log('✓✓ MS Cocina conectado a Camunda Cloud exitosamente');
+      return;
+    } catch (err) {
+      console.error(`⚠︎ Intento ${attempt} - No se pudo conectar a Camunda:`, (err as any).message);
+      if (attempt === maxAttempts) throw err;
+      await new Promise(r => setTimeout(r, 2000 * attempt));
+    }
+  }
+};
+
+connectWithRetries().catch((err) => {
+  console.error('⚠︎ Fatal: No se pudo conectar a Camunda Cloud tras varios intentos:', err);
+  process.exit(1);
 });
