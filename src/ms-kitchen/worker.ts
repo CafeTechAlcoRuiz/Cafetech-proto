@@ -11,6 +11,7 @@ const zbc = new ZBClient(process.env.ZEEBE_ADDRESS || 'localhost:26500', {
   useTLS: true,
   oAuth: {
     url: 'https://login.cloud.camunda.io/oauth/token',
+    audience: 'zeebe.camunda.io',
     clientId: process.env.ZEEBE_CLIENT_ID!,
     clientSecret: process.env.ZEEBE_CLIENT_SECRET!
   }
