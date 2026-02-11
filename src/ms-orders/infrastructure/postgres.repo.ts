@@ -50,7 +50,9 @@ export class PostgresOrderRepo implements OrderRepository {
         await this.inicializarTabla();
         return;
       } catch (err) {
-        console.error(`⚠︎ Intento ${attempt} - no se pudo conectar a Postgres:`, err?.message || err);
+          // err tiene tipo desconocido; obtener mensaje de forma segura
+          const errMessage = err && typeof (err as any).message === 'string' ? (err as any).message : String(err);
+          console.error(`⚠︎ Intento ${attempt} - no se pudo conectar a Postgres:`, errMessage);
         if (attempt === maxAttempts) throw err;
         await delay(baseDelayMs * attempt);
       }
