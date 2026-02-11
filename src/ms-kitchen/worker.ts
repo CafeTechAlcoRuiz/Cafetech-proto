@@ -82,7 +82,7 @@ zbc.createWorker({
   }
 });
 
-// Conectar con reintentos
+// Conectar con reintentos (en background, no bloqueante)
 const connectWithRetries = async (maxAttempts = 10) => {
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
@@ -91,13 +91,15 @@ const connectWithRetries = async (maxAttempts = 10) => {
       return;
     } catch (err) {
       console.error(`⚠︎ Intento ${attempt} - No se pudo conectar a Camunda:`, (err as any).message);
-      if (attempt === maxAttempts) throw err;
-      await new Promise(r => setTimeout(r, 2000 * attempt));
+      if (attempt === maxAttempts) {
+        console.error('⚠︎ Se alcanzó el máximo de intentos, continuando sin conexión...');
+        return;
+      }
+      await new Promise(r => setTimeout(r, 1000 * attempt));
     }
   }
 };
 
 connectWithRetries().catch((err) => {
-  console.error('⚠︎ Fatal: No se pudo conectar a Camunda Cloud tras varios intentos:', err);
-  process.exit(1);
+  console.error('⚠︎ Error en background de conexión:', err);
 });
