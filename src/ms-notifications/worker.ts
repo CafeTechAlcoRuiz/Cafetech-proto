@@ -20,7 +20,9 @@ app.listen(PORT, () => {
 });
 
 // Configurar cliente Zeebe para Camunda Cloud
-const gatewayAddress = process.env.ZEEBE_CLUSTER_ID! + '.cdg-1.zeebe.camunda.io:443';
+const clusterId = process.env.ZEEBE_CLUSTER_ID!;
+const gatewayAddress = clusterId + '.cdg-1.zeebe.camunda.io:26500';
+console.log(`🔗 Conectando a Camunda Cloud: ${gatewayAddress}`);
 const zbc = new ZBClient(gatewayAddress, {
   useTLS: true,
   oAuth: {
