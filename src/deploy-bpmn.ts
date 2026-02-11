@@ -9,7 +9,9 @@ async function deploy() {
   console.log('Iniciando despliegue de flujo BPMN...');
 
   try {
-    const zbc = new ZBClient(process.env.ZEEBE_ADDRESS || 'localhost:26500', {
+    const zbc = new ZBClient({
+      hostname: process.env.ZEEBE_CLUSTER_ID! + '.cdg-1.zeebe.camunda.cloud',
+      port: 443,
       useTLS: true,
       oAuth: {
         url: 'https://login.cloud.camunda.io/oauth/token',
