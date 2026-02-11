@@ -3,8 +3,21 @@ import { MongoNotificationRepo } from './infraestructura/mongo.repo';
 import { SendNotificationUseCase } from './application/send-notification.usecase';
 import { RabbitMQClient } from '../shared/rabbit';
 import dotenv from 'dotenv';
+import express from 'express';
 
 dotenv.config();
+
+// Health check server para Render
+const app = express();
+const PORT = process.env.PORT || 3003;
+
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', service: 'ms-notifications' });
+});
+
+app.listen(PORT, () => {
+  console.log(`🏥 Health check server escuchando en puerto ${PORT}`);
+});
 
 // Configurar cliente Zeebe para Camunda Cloud
 const gatewayAddress = process.env.ZEEBE_CLUSTER_ID! + '.cdg-1.zeebe.camunda.io:443';
