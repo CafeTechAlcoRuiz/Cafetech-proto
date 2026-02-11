@@ -16,4 +16,6 @@ COPY src ./src
 RUN npm run build || npx tsc
 
 # Comando para iniciar el microservicio de órdenes
+# Forzar IPv4 en resolución DNS
+ENV NODE_OPTIONS="--dns-result-order=ipv4first"
 CMD ["node", "dist/ms-orders/worker.js"]

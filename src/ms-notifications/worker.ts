@@ -25,11 +25,6 @@ const gatewayAddress = clusterId + '.cdg-1.zeebe.camunda.io:26500';
 console.log(`🔗 Conectando a Camunda Cloud: ${gatewayAddress}`);
 const zbc = new ZBClient(gatewayAddress, {
   useTLS: true,
-  channelOptions: {
-    'grpc.ipv6_loopback_only': 0,  // Deshabilitar IPv6
-    'grpc.max_connection_idle_ms': 60000,
-    'grpc.max_connection_age_ms': 300000,
-  },
   oAuth: {
     url: 'https://login.cloud.camunda.io/oauth/token',
     audience: 'zeebe.camunda.io',
