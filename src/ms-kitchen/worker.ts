@@ -1,4 +1,4 @@
-import { ZBClient } from '@camunda8/sdk';
+import { ZBClient } from 'zeebe-node';
 import { PrepareOrderUseCase } from './application/prepare-order.usecase';
 import { PostgresTicketRepo } from './infraestructure/postgres.repo';
 import { RabbitMQClient } from '../shared/rabbit';
@@ -8,11 +8,13 @@ dotenv.config();
 
 // Configurar cliente Zeebe para Camunda Cloud
 const zbc = new ZBClient({
-  clientId: process.env.ZEEBE_CLIENT_ID,
-  clientSecret: process.env.ZEEBE_CLIENT_SECRET,
-  camundaCloud: {
-    clusterId: process.env.ZEEBE_ADDRESS?.split('.')[0] || '',
-    region: 'cdg-1'
+  hostname: process.env.ZEEBE_ADDRESS || 'localhost',
+  port: 26500,
+  useTLS: true,
+  oAuth: {
+    url: 'https://login.cloud.camunda.io/oauth/token',
+    clientId: process.env.ZEEBE_CLIENT_ID,
+    clientSecret: process.env.ZEEBE_CLIENT_SECRET
   }
 });
 

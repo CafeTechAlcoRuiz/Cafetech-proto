@@ -1,4 +1,4 @@
-import { ZBClient } from '@camunda8/sdk';
+import { ZBClient } from 'zeebe-node';
 import path from 'path';
 import dotenv from 'dotenv';
 import * as fs from 'fs';
