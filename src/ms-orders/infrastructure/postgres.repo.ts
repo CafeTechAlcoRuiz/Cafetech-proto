@@ -8,7 +8,13 @@ export class PostgresOrderRepo implements OrderRepository {
   private pool = new Pool({ connectionString: process.env.PG_CONNECTION });
 
   constructor() {
-    this.inicializarTabla();
+    // iniciar la verificación/creación de tabla de forma resiliente
+    // (no bloqueante en el constructor)
+    this.ensureConnectedAndInit().catch((err) => {
+      console.error('⚠︎ ERROR: Postgres no disponible tras varios intentos:', err);
+      // lanzar para que el proceso falle si lo deseas, o mantener en retry indefinido
+      process.exit(1);
+    });
   }
 
   private async inicializarTabla() {
@@ -27,6 +33,27 @@ export class PostgresOrderRepo implements OrderRepository {
       console.error('⚠︎ ERROR: Error inicializando tabla orders:', err);
     } finally {
       client.release();
+    }
+  }
+
+  private async ensureConnectedAndInit() {
+    const maxAttempts = Number(process.env.PG_CONNECT_RETRIES || 10);
+    const baseDelayMs = Number(process.env.PG_CONNECT_DELAY_MS || 2000);
+
+    const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        const client = await this.pool.connect();
+        client.release();
+        console.log(`✓ Conectado a Postgres (intento ${attempt})`);
+        await this.inicializarTabla();
+        return;
+      } catch (err) {
+        console.error(`⚠︎ Intento ${attempt} - no se pudo conectar a Postgres:`, err?.message || err);
+        if (attempt === maxAttempts) throw err;
+        await delay(baseDelayMs * attempt);
+      }
     }
   }
 
