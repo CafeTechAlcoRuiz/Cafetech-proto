@@ -22,7 +22,7 @@ console.log('📦 MS Órdenes (Worker) escuchando tareas...');
 // 1. Worker de Validación
 zbc.createWorker({
   taskType: 'validar-stock',
-  taskHandler: async (job) => {
+  taskHandler: async (job: any) => {
     const { orderId, items } = job.variables;
     console.log(`\nVALIDACIÓN: Validando Orden: ${orderId}`);
     try {
@@ -48,7 +48,7 @@ zbc.createWorker({
 // 2. Worker de Cobro
 zbc.createWorker({
   taskType: 'cobrar-orden',
-  taskHandler: async (job) => {
+  taskHandler: async (job: any) => {
     const { orderId, total } = job.variables;
     console.log(`$$$ Procesando pago para Orden: ${orderId}`);
     
@@ -63,7 +63,7 @@ zbc.createWorker({
 // 3. Worker de Delivery (Para finalizar el flujo después de notificar)
 zbc.createWorker({
   taskType: 'asignar-delivery',
-  taskHandler: async (job) => {
+  taskHandler: async (job: any) => {
     const { orderId } = job.variables;
     console.log(`\nPOSTERIOR A NOTIFICAR QUE LA ORDEN ESTÁ LISTA:`);
     console.log(`BÚSQUEDA: Buscando repartidor para Orden: ${orderId}...`);

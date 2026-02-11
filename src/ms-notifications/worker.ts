@@ -41,7 +41,7 @@ const iniciarNotificaciones = async () => {
   // 3. Worker de Camunda para Notificaciones Generales (Éxito o Fallo controlado)
   zbc.createWorker({
     taskType: 'notificar-usuario',
-    taskHandler: async (job) => {
+    taskHandler: async (job: any) => {
       const { orderId } = job.variables;
       // Notificación genérica de fin de proceso
       await useCase.execute(orderId, "Proceso finalizado correctamente", 'EMAIL');
@@ -51,7 +51,7 @@ const iniciarNotificaciones = async () => {
 
   zbc.createWorker({
     taskType: 'log-error',
-    taskHandler: async (job) => {
+    taskHandler: async (job: any) => {
       const { orderId } = job.variables;
       await useCase.execute(orderId, "CANCELACIÓN FORZADA DEL SISTEMA", 'SMS');
       return job.complete();

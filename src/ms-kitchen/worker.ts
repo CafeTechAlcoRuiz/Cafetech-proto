@@ -24,7 +24,7 @@ console.log('🍳 MS Cocina (Worker) conectado a Postgres y escuchando tareas...
 // Worker Principal
 zbc.createWorker({
   taskType: 'preparar-orden',
-  taskHandler: async (job) => {
+  taskHandler: async (job: any) => {
     const { orderId, items } = job.variables;
     console.log(`\n♨ Preparando Orden: ${orderId}`);
 
@@ -70,7 +70,7 @@ zbc.createWorker({
 // Worker de Compensación
 zbc.createWorker({
   taskType: 'reembolsar-dinero',
-  taskHandler: async (job) => {
+  taskHandler: async (job: any) => {
     const { orderId } = job.variables;
     console.log(`ʚ$ɞ  COMPENSACIÓN: Iniciando reembolso para Orden ${orderId}...`);
     await new Promise(resolve => setTimeout(resolve, 1000));
