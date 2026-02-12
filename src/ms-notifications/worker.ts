@@ -35,6 +35,7 @@ const iniciarNotificaciones = async () => {
   zbc.createWorker({
     taskType: 'notificar-usuario',
     taskHandler: async (job) => {
+      console.log(`\n 📯 FINALIZACIÓN DE PROCESO DE NOTIFICACIÓN PARA ORDEN`);
       const { orderId } = job.variables;
       // Notificación genérica de fin de proceso
       await useCase.execute(orderId, "Proceso finalizado correctamente", 'EMAIL');

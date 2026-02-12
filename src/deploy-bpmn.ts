@@ -11,7 +11,7 @@ async function deploy() {
   const zbc = new ZBClient(); 
 
   try {
-    const filepath = path.join(__dirname, 'bpmn', 'diagrama_cafetech.bpmn');
+    const filepath = path.join(__dirname, 'bpmn', 'diagrama_cafetech_new.bpmn');
     
     // El comando mágico que sube el archivo
     const res = await zbc.deployResource({

@@ -12,8 +12,9 @@ export class PrepareOrderUseCase {
     await this.repo.save(ticket);
     console.log(`𐂐◯🗡 Nuevo ticket en Cocina: Ticket ${ticket.idTicket} creado a las ${ticket.horaEntrada.toISOString()}`);
 
-    // SIMULACIÓN DE PROCESO (2 segundos)
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // SIMULACIÓN DE PROCESO (20 segundos)
+    console.log(`... Preparación de orden.`);
+    await new Promise(resolve => setTimeout(resolve, 5000));
 
     // --- LÓGICA DE EXCEPCIÓN (Escenario de excepción) ---
     const debeFallar = items.some((i: any) => i.product === 'error_cocina');

@@ -3,7 +3,15 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "deploy": "ts-node src/deploy-bpmn.ts",
+    "gateway": "ts-node src/gateway/server.ts",
+    "bridge": "ts-node src/worker-bridge/index.ts",
+    "orders": "ts-node src/ms-orders/worker.ts",
+    "kitchen": "ts-node src/ms-kitchen/worker.ts",
+    "notif": "ts-node src/ms-notifications/worker.ts",
+    "trigger": "ts-node src/trigger-signal.ts",
+    "start:all": "concurrently \"npm run gateway\" \"npm run bridge\" \"npm run orders\" \"npm run kitchen\" \"npm run notif\""
   },
   "keywords": [],
   "author": "",
@@ -12,6 +20,7 @@
   "devDependencies": {
     "@types/node": "^25.2.2",
     "@types/uuid": "^9.0.8",
+    "concurrently": "^9.2.1",
     "nodemon": "^3.1.11",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"

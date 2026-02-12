@@ -35,7 +35,6 @@ zbc.createWorker({
 
       // lógica de negocio (aquí ocurre la espera de 2 seg)
       await useCase.execute(orderId, items);
-      console.log(`... Preparación de orden.`);
 
       // Notificar LISTA (Al terminar con éxito)
       await rabbit.publish('app_notifications', {
@@ -43,6 +42,8 @@ zbc.createWorker({
         estado: 'LISTA',
         detalle: 'Tu pedido está listo para entrega.'
       });
+
+      await new Promise(resolve => setTimeout(resolve, 5000)); // Simular tiempo de notificación
 
       return job.complete();
     } catch (e: any) {
